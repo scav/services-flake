@@ -18,14 +18,6 @@
         type = lib.types.str;
         default = "mock";
       };
-      redirectURIs = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [
-          "http://127.0.0.1:4180/oauth2/callback"
-          "http://127.0.0.1:3000/oauth2/callback"
-        ];
-        description = "Where Dex should redirect back to after login";
-      };
       groups = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [
@@ -94,33 +86,72 @@
           }
         ];
       };
+      staticClients = lib.mkOption {
+        type = lib.types.listOf (
+          lib.types.submodule {
+            options = {
+              id = lib.mkOption {
+                type = lib.types.str;
+                example = "public-client";
+                description = "Unique client identifier.";
+              };
+              public = lib.mkOption {
+                type = lib.types.bool;
+                default = false;
+                description = "Whether the OAuth/OIDC client is a public client.";
+              };
+              name = lib.mkOption {
+                type = lib.types.str;
+                example = "Public Client";
+                description = "Human-readable client name.";
+              };
+              redirectURIs = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
+                default = [ "http://127.0.0.1:3000/oauth2/callback" ];
+                example = [
+                  "http://127.0.0.1:4180/oauth2/callback"
+                  "http://127.0.0.1:3000/oauth2/callback"
+                ];
+                description = "List of allowed OAuth2 redirect URIs.";
+              };
+              secret = lib.mkOption {
+                type = lib.types.nullOr lib.types.str;
+                default = null;
+                description = "Client secret (required for confidential clients).";
+              };
+            };
+          }
+        );
+        description = "List of clients";
+        default = [ ];
+      };
     };
+
   };
 
   config =
     let
       cfg = config.services.dex-mock;
-
       dexConfigFile = pkgs.writeText "dex-config.yaml" (
-        builtins.toJSON {
-          issuer = "http://${cfg.listen}";
-          storage = {
-            type = "memory";
-          };
-          web = {
-            http = cfg.listen;
-          };
-          staticClients = [
-            {
-              id = cfg.clientId;
-              name = "Mock Client Proxy";
-              secret = "proxy";
-              redirectURIs = cfg.redirectURIs;
-            }
-          ];
-          enablePasswordDB = true;
-          staticPasswords = cfg.staticPasswords;
-        }
+        builtins.toJSON (
+          {
+            issuer = "http://${cfg.listen}";
+            storage = {
+              type = "memory";
+            };
+            web = {
+              http = cfg.listen;
+            };
+            enablePasswordDB = true;
+            staticPasswords = cfg.staticPasswords;
+            staticClients = cfg.staticClients;
+          }
+          // lib.optionalAttrs (cfg.staticClients != [ ]) {
+            oauth2 = {
+              passwordConnector = "local";
+            };
+          }
+        )
       );
     in
     lib.mkIf cfg.enable {
