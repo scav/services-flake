@@ -80,7 +80,7 @@
           ${lib.getExe cfg.package} serve ${dexConfigFile}
         '';
         readiness_probe = {
-          exec.command = "curl -f http://127.0.0.1:8081";
+          exec.command = "curl -f http://${cfg.listen}";
           initial_delay_seconds = 5;
           period_seconds = 5;
         };
