@@ -37,6 +37,63 @@
           "admin"
         ];
       };
+      staticPasswords = lib.mkOption {
+        type = lib.types.listOf (
+          lib.types.submodule {
+            options = {
+              email = lib.mkOption {
+                type = lib.types.str;
+                example = "user@example.com";
+                description = "User's email address.";
+              };
+              password = lib.mkOption {
+                type = lib.types.str;
+                default = "password";
+                description = "Plaintext password.";
+              };
+              hash = lib.mkOption {
+                type = lib.types.str;
+                default = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
+                description = "Password password hash.";
+              };
+              userID = lib.mkOption {
+                type = lib.types.str;
+                description = "Unique identifier (UUID) for the user.";
+              };
+              groups = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
+                default = [ "unset" ];
+                description = "Groups assigned to the user.";
+              };
+            };
+          }
+        );
+        default = [
+          {
+            email = "user@example.com";
+            password = "password";
+            hash = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
+            userID = "083af62d-0e42-4ee4-8f06-fe41a7dc2612";
+            groups = [
+              "NoRole"
+              "admin"
+            ];
+          }
+        ];
+        description = "List of users available in Dex built in provider";
+        example = [
+          {
+            email = "user@example.com";
+            password = "password";
+            hash = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
+            userID = "083af62d-0e42-4ee4-8f06-fe41a7dc2612";
+            groups = [
+              "NoRole"
+              "admin"
+            ];
+          }
+        ];
+      };
     };
   };
 
@@ -62,15 +119,7 @@
             }
           ];
           enablePasswordDB = true;
-          staticPasswords = [
-            {
-              email = "user@example.com";
-              password = "password";
-              hash = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
-              userID = "083af62d-0e42-4ee4-8f06-fe41a7dc2612";
-              groups = cfg.groups;
-            }
-          ];
+          staticPasswords = cfg.staticPasswords;
         }
       );
     in
