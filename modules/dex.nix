@@ -14,6 +14,11 @@
         default = "127.0.0.1:8081";
         description = "Host and port for Dex to listen on";
       };
+      issuer = lib.mkOption {
+        type = lib.types.str;
+        default = "127.0.0.1:8082";
+        description = "OIDC issuer";
+      };
       clientId = lib.mkOption {
         type = lib.types.str;
         default = "mock";
@@ -135,7 +140,7 @@
       dexConfigFile = pkgs.writeText "dex-config.yaml" (
         builtins.toJSON (
           {
-            issuer = "http://${cfg.listen}";
+            issuer = "http://${cfg.issuer}";
             storage = {
               type = "memory";
             };
